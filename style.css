@@ -56,7 +56,14 @@ header h1 {
   margin-bottom: 12px;
 }
 
-#theme-toggle {
+.header-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+#theme-toggle,
+#view-toggle {
   background: var(--filter-bg);
   border: 1px solid var(--filter-border);
   border-radius: 50%;
@@ -67,11 +74,12 @@ header h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
   flex-shrink: 0;
+  color: var(--text);
 }
 
-#theme-toggle:hover {
+#theme-toggle:hover,
+#view-toggle:hover {
   border-color: var(--accent);
 }
 
@@ -110,10 +118,31 @@ header h1 {
   border-color: var(--accent);
 }
 
-#links {
+/* Grid view (default) */
+#links.grid-view {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 14px;
+}
+
+/* List view */
+#links.list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#links.list-view .card {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+}
+
+#links.list-view .card p {
+  margin-top: 0;
+  flex-basis: 100%;
 }
 
 .card {
@@ -146,6 +175,10 @@ header h1 {
   background: var(--category-bg);
   padding: 2px 8px;
   border-radius: 10px;
+}
+
+#links.list-view .category {
+  margin-top: 0;
 }
 
 .card p {

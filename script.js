@@ -25,6 +25,26 @@ function applyTheme(theme) {
   }
 }
 
+// --- View handling (grid/list) ---
+const viewToggle = document.getElementById('view-toggle');
+const linksContainer = document.getElementById('links');
+const savedView = localStorage.getItem('view') || 'grid';
+
+applyView(savedView);
+
+viewToggle.addEventListener('click', () => {
+  const current = linksContainer.classList.contains('list-view') ? 'list' : 'grid';
+  const next = current === 'grid' ? 'list' : 'grid';
+  applyView(next);
+  localStorage.setItem('view', next);
+});
+
+function applyView(view) {
+  linksContainer.classList.remove('grid-view', 'list-view');
+  linksContainer.classList.add(view === 'list' ? 'list-view' : 'grid-view');
+  viewToggle.textContent = view === 'list' ? '☰' : '▦';
+}
+
 // --- Data loading ---
 fetch('links.json')
   .then(res => res.json())
@@ -34,18 +54,17 @@ fetch('links.json')
     render(allLinks);
   })
   .catch(err => {
-    document.getElementById('links').innerHTML =
+    linksContainer.innerHTML =
       '<p style="color:#f66">Could not load links.json — check the file exists and is valid JSON.</p>';
     console.error(err);
   });
 
 function render(links) {
-  const container = document.getElementById('links');
   if (links.length === 0) {
-    container.innerHTML = '<p style="color:#777">No matches.</p>';
+    linksContainer.innerHTML = '<p style="color:#777">No matches.</p>';
     return;
   }
-  container.innerHTML = links.map(l => `
+  linksContainer.innerHTML = links.map(l => `
     <div class="card">
       <a href="${l.url}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.name)}</a>
       <div><span class="category">${escapeHtml(l.category || 'Uncategorized')}</span></div>
@@ -74,8 +93,12 @@ function applyFilters() {
 document.getElementById('search').addEventListener('input', applyFilters);
 
 function buildFilters(links) {
-  const cats = [...new Set(links.map(l => l.category).filter(Boolean))].sort();
+  // A–Z sort of categories
+  const cats = [...new Set(links.map(l => l.category).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
+
   const el = document.getElementById('filters');
+  el.innerHTML = '';
 
   const allBtn = document.createElement('button');
   allBtn.textContent = 'All';
