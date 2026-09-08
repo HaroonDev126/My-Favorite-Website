@@ -50,6 +50,7 @@ fetch('links.json')
   .then(res => res.json())
   .then(data => {
     allLinks = data;
+    reportCounts(allLinks);
     buildFilters(allLinks);
     render(allLinks);
   })
@@ -59,18 +60,54 @@ fetch('links.json')
     console.error(err);
   });
 
+// Counts total entries, flags duplicate URLs, and shows the true unique count.
+function reportCounts(links) {
+  const seen = new Map();
+  const duplicates = [];
+
+  links.forEach(l => {
+    const key = l.url.trim().toLowerCase().replace(/\/$/, '');
+    if (seen.has(key)) {
+      duplicates.push(l.url);
+    } else {
+      seen.set(key, true);
+    }
+  });
+
+  const uniqueCount = seen.size;
+  const totalCount = links.length;
+
+  const countEl = document.getElementById('link-count');
+  if (duplicates.length > 0) {
+    countEl.textContent = `${uniqueCount} unique tools bookmarked (${duplicates.length} duplicate${duplicates.length > 1 ? 's' : ''} found — check console)`;
+    console.warn('Duplicate URLs in links.json:', duplicates);
+  } else {
+    countEl.textContent = `${totalCount} unique tools bookmarked`;
+  }
+}
+
 function render(links) {
   if (links.length === 0) {
     linksContainer.innerHTML = '<p style="color:#777">No matches.</p>';
     return;
   }
-  linksContainer.innerHTML = links.map(l => `
-    <div class="card">
-      <a href="${l.url}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.name)}</a>
-      <div><span class="category">${escapeHtml(l.category || 'Uncategorized')}</span></div>
-      <p>${escapeHtml(l.notes || '')}</p>
-    </div>
-  `).join('');
+  linksContainer.innerHTML = links.map(l => {
+    let favicon = '';
+    try {
+      const domain = new URL(l.url).hostname;
+      favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    } catch (e) {}
+    return `
+      <div class="card">
+        <div class="card-header">
+          ${favicon ? `<img src="${favicon}" class="favicon" alt="" loading="lazy" onerror="this.style.display='none'">` : ''}
+          <a href="${l.url}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.name)}</a>
+        </div>
+        <div><span class="category">${escapeHtml(l.category || 'Uncategorized')}</span></div>
+        <p>${escapeHtml(l.notes || '')}</p>
+      </div>
+    `;
+  }).join('');
 }
 
 function applyFilters() {
@@ -93,7 +130,6 @@ function applyFilters() {
 document.getElementById('search').addEventListener('input', applyFilters);
 
 function buildFilters(links) {
-  // A–Z sort of categories
   const cats = [...new Set(links.map(l => l.category).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b));
 
